@@ -1,0 +1,12 @@
+{
+    "light infantry": {
+        "name" :"light infantry",
+        "hd" : 1,
+        "armor" : 4
+    },
+    "medium infantry" : {
+        "name" :"light infantry",
+        "hd" : 1,
+        "armor" : 5
+    }
+}

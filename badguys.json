@@ -1,0 +1,7 @@
+{
+    "name" : "Bad Guys",
+    "units": {
+        "firstUnit" :  {"type" : "light infantry",  "figureCount" : 8},
+        "secondUnit" : {"type" : "medium infantry", "figureCount" : 12}
+    }
+}
