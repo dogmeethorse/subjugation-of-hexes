@@ -21,35 +21,9 @@
 from operator import itemgetter, attrgetter, methodcaller
 import random, json
 
-armies = {}
+armies = [] #nicer if ordered for initiative so not a dict
 roster  = {} #the types of units available
 figureStatStream = open("figures.json", 'r')
-
-
-class Figure:
-    def __init__(self, statBlock):
-        self.name  = statBlock['name']
-        self.hd    = statBlock['hd']
-        self.armor = statBlock['armor']
-        self.hp = self.hd 
-    
-    def __str__(self):
-        return self.name
-        
-class Unit:
-    def __init__(self, statBlock):
-        self.type = 0
-        self.figureCount = 0
-    
-    def __str__(self):
-        pass
-        #return self.name + " army size = " + str(len(self.figures))
-    
-    def create(self):
-        pass
-        #for i in range(random.randint(1,100)):
-         #   self.figures.append(lightInfantry)
-        #self.figureCount = len(self.figures)
 
 def roll2d6():
     return random.randint(1,6)+ random.randint(1,6)
@@ -57,7 +31,50 @@ def roll2d6():
 def hit(target):
     roll = random.randint(1,6)
     return roll >= target
+
+class Figure:
+    def __init__(self, statBlock):
+        self.name  = statBlock['name']
+        self.hd    = statBlock['hd']
+        self.armor = statBlock['armor']
+        self.hp    = self.hd 
     
+    def __str__(self):
+        return self.name
+        
+class Unit:
+    def __init__(self, statBlock):
+        self.type = roster[statBlock['type']]
+        self.figureCount = statBlock['figureCount']
+        self.figures = self.muster()
+        self.casualties = 0
+        self.rateOfLoss = 0
+        self.morale = "ok"
+    
+    def __str__(self):
+        pass
+        #return self.name + " Unit Count = " + str(len(self.figures))
+    
+    def muster(self):
+        figs = []
+        for fig in range(self.figureCount):
+           figs.append(self.type)
+        return figs
+    
+    def checkMorale(self):
+        pass
+
+class Army:
+    def __init__(self, statBlock):
+        self.name = statBlock['name']
+        self.units = []
+        for unit in statBlock['units']:
+            self.units.append(Unit(statBlock['units'][unit]))
+        self.initiative = 0
+    
+    def rollInitiative(self):
+        self.initiative = roll2d6()
+        
 def combat(armies):
     casualties = 0
     result = ""
@@ -65,10 +82,12 @@ def combat(armies):
     bothSidesWent = False
     
     #initiative
-    for army in armies:
-        army['initiative'] = roll2d6()
-
-    armies = sorted(units, key=attrgetter('initiative'), reverse=True)
+    while armies[0].initiative is armies[1].initiative:
+        for army in armies:
+            army.rollInitiative()
+    armies.sort(key = attrgetter('initiative'), reverse=True)
+    print armies[0].initiative
+    print armies[1].initiative
     #attack
     for unit in army['units'].keys():
         if len(units[1].figures) > 0 and hit(units[1].figures[0].armor):
@@ -94,13 +113,22 @@ unitList = json.load(figureStatStream)
   
 for statBlock in unitList.keys():
     roster[statBlock] = Figure(unitList[statBlock])
-print roster
+
 while len(armies) < 2:
     armytoload = raw_input("enter the file name of the army to load: ")
-    armyList = json.load(open(armytoload, 'r'))
-    armies[armyList['name']] = armyList
-    print "loading army:"
+    try: 
+        armyList = json.load(open(armytoload, 'r'))
+    except:
+        if 'Good Guys' not in armies:
+            armyList = json.load(open('goodguys.json', 'r'))
+        else:
+            armyList = json.load(open('badguys.json', 'r'))
+    print "army list type"
+    print type(armyList)
+    armies.append(Army(armyList))
+    print "object"
+    print "loading army: "
     print json.dumps(armyList, indent=4, sort_keys=True)
+print "done"
 
-#combat([goodguys, badguys])
-
+combat(armies)
